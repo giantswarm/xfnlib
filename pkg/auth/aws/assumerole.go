@@ -3,7 +3,7 @@ package aws
 import (
 	"context"
 
-	"github.com/giantswarm/function-describe-nodegroups/pkg/auth/kubernetes"
+	"github.com/giantswarm/xfnlib/pkg/auth/kubernetes"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
