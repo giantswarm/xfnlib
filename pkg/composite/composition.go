@@ -14,7 +14,7 @@ import (
 // Composition contains the main request objects required for interacting with composition function resources.
 type Composition struct {
 	// ObservedComposite is an object that reflects the composite resource that is created from the claim
-	ObservedComposite resource.Composite
+	ObservedComposite any
 
 	// DesiredComposite is the raw composite resource we want creating
 	DesiredComposite *resource.Composite
@@ -63,9 +63,10 @@ type Input struct {
 //		response.Normal(rsp, "Successful run")
 //		return rsp, nil
 //	}
-func New(req *fnv1beta1.RunFunctionRequest, input InputProvider) (c *Composition, err error) {
+func New(req *fnv1beta1.RunFunctionRequest, input InputProvider, composite any) (c *Composition, err error) {
 	c = &Composition{
-		Input: input,
+		Input:             input,
+		ObservedComposite: composite,
 	}
 
 	if c.DesiredComposite, err = request.GetDesiredCompositeResource(req); err != nil {
