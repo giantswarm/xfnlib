@@ -1,6 +1,8 @@
 package composite
 
 import (
+	"reflect"
+
 	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	fnv1beta1 "github.com/crossplane/function-sdk-go/proto/v1beta1"
 	"github.com/crossplane/function-sdk-go/request"
@@ -29,13 +31,10 @@ type Composition struct {
 	Input InputProvider
 }
 
+// InputProvider This is basically a wrapper to `runtime.Object` and exists to ensure that
+// all inputs to the `New` conform to a supported type
 type InputProvider interface {
 	runtime.Object
-}
-
-type Input struct {
-	InputProvider
-	Spec *runtime.Object
 }
 
 // New takes a RunFunctionRequest object and converts it to a Composition
@@ -48,13 +47,16 @@ type Input struct {
 //		f.log.Info("Running Function", composedName, req.GetMeta().GetTag())
 //		rsp = response.To(req, response.DefaultTTL)
 //
-//		if f.composed, err = RequestToComposition(req); err != nil {
+//		input := v1beta1.Input{}
+//		if f.composed, err = composite.New(req, &input, &f.composite); err != nil {
 //			response.Fatal(rsp, errors.Wrap(err, "error setting up function "+composedName))
 //			return rsp, nil
 //		}
+//
 //		...
 //		// Function body
 //		...
+//
 //		if err = f.composed.ToResponse(rsp); err != nil {
 //			response.Fatal(rsp, errors.Wrapf(err, "cannot convert composition to response %T", rsp))
 //			return
@@ -122,7 +124,16 @@ func (c *Composition) ToResponse(rsp *fnv1beta1.RunFunctionResponse) (err error)
 }
 
 // AddDesired takes an unstructured object and adds it to the desired composed resources
+//
+// If the object exists on the stack already, we do a deepEqual to see if the object has changed
+// and if not, this method won't do anything.
 func (c *Composition) AddDesired(name string, object *unstructured.Unstructured) (err error) {
+	if o, ok := c.DesiredComposed[resource.Name(name)]; ok {
+		// Object exists and hasn't changed
+		if reflect.DeepEqual(o.Resource.Object, object.Object) {
+			return
+		}
+	}
 	c.DesiredComposed[resource.Name(name)] = &resource.DesiredComposed{
 		Resource: &composed.Unstructured{
 			Unstructured: *object,

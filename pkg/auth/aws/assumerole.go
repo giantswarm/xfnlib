@@ -16,6 +16,9 @@ import (
 	"github.com/giantswarm/xfnlib/pkg/composite"
 )
 
+// GetAssumeRoleArn retrieves the current provider role arn from the providerconfig
+//
+// This requires the service account the function is runmning
 func GetAssumeRoleArn(providerConfigRef *string) (arn *string, err error) {
 	var (
 		unstructuredData *unstructured.Unstructured = &unstructured.Unstructured{}
