@@ -67,7 +67,7 @@ func Config(region, providerConfigRef *string) (cfg aws.Config, err error) {
 	)
 
 	if assumeRoleArn, err = GetAssumeRoleArn(providerConfigRef); err != nil {
-		err = errors.Wrapf(err, "unable to get assumerole. assumerolearn is '%q'", *assumeRoleArn)
+		err = errors.Wrap(err, "unable to get assumerole")
 		return
 	}
 
