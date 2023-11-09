@@ -38,7 +38,7 @@ func GetAssumeRoleArn(providerConfigRef *string) (arn *string, err error) {
 	if err = cl.Get(context.Background(), client.ObjectKey{
 		Name: *providerConfigRef,
 	}, unstructuredData); err != nil {
-		err = errors.Wrap(err, "failed to load providerconfig")
+		err = errors.Wrapf(err, "failed to load providerconfig %s", *providerConfigRef)
 		return
 	}
 
@@ -67,6 +67,7 @@ func Config(region, providerConfigRef *string) (cfg aws.Config, err error) {
 	)
 
 	if assumeRoleArn, err = GetAssumeRoleArn(providerConfigRef); err != nil {
+		err = errors.Wrapf(err, "unable to get assumerole. assumerolearn is '%q'", *assumeRoleArn)
 		return
 	}
 
@@ -74,7 +75,7 @@ func Config(region, providerConfigRef *string) (cfg aws.Config, err error) {
 	if acfg, err = config.LoadDefaultConfig(
 		ctx, config.WithRegion(*region),
 	); err != nil {
-		err = errors.Wrap(err, "failed to load initial aws config")
+		err = errors.Wrapf(err, "failed to load initial aws config for region %q", *region)
 		return
 	}
 	stsclient := sts.NewFromConfig(acfg)
@@ -89,7 +90,7 @@ func Config(region, providerConfigRef *string) (cfg aws.Config, err error) {
 			)),
 		),
 	); err != nil {
-		err = errors.Wrap(err, "failed to load aws config for assume role")
+		err = errors.Wrapf(err, "failed to load aws config for assume role '%q'", *assumeRoleArn)
 	}
 	return
 }
