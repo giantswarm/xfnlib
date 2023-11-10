@@ -47,7 +47,7 @@ func ToUnstructured(apiVersion, kind, object any) (objectSpec *unstructured.Unst
 
 // ToUnstructuredKubernetesObject is a helper function that wraps a given CR resource in
 // a `crossplane-contrib/provider-kubernetes.Object` structure and returns this as an unstructured.Unstructured object
-func ToUnstructuredKubernetesObject(mp any, providerConfigRef string) (objectSpec *unstructured.Unstructured, err error) {
+func ToUnstructuredKubernetesObject(mp any, providerConfigRef, deletionPolicy string) (objectSpec *unstructured.Unstructured, err error) {
 	objectSpec = &unstructured.Unstructured{}
 	var unstructuredData map[string]interface{}
 	if err = To(mp, &unstructuredData); err != nil {
@@ -78,6 +78,7 @@ func ToUnstructuredKubernetesObject(mp any, providerConfigRef string) (objectSpe
 			"labels": labels,
 		},
 		"spec": map[string]interface{}{
+			"deletionPolicy": deletionPolicy,
 			"forProvider": map[string]interface{}{
 				"manifest": unstructuredData,
 			},
