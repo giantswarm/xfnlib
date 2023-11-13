@@ -51,7 +51,7 @@ type InputProvider interface {
 //		rsp = response.To(req, response.DefaultTTL)
 //
 //		input := v1beta1.Input{}
-//		if f.composed, err = composite.New(req, &input, &f.composite); err != nil {
+//		if composed, err = composite.New(req, &input, &composite); err != nil {
 //			response.Fatal(rsp, errors.Wrap(err, "error setting up function "+composedName))
 //			return rsp, nil
 //		}
@@ -133,6 +133,10 @@ func (c *Composition) ToResponse(r *fnv1beta1.RunFunctionResponse) (err error) {
 //
 // If the object exists on the stack already, we do a deepEqual to see if the
 // object has changed and if not, this method won't do anything.
+//
+// - `n` The name of the composite resource to add. This is the pipeline name
+//   and not the metadata name
+// - `u` The unstructured object to add to the set of desired resources
 func (c *Composition) AddDesired(n string, u *unstructured.Unstructured) (err error) {
 	if o, ok := c.DesiredComposed[resource.Name(n)]; ok {
 		// Object exists and hasn't changed
