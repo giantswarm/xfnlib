@@ -2,17 +2,16 @@ package composite
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-// ToUnstructured is a helper function that creates an unstructured object from any object
-// that contains metadata, spec and optionally status.
-func ToUnstructured(apiVersion, kind, object any) (objectSpec *unstructured.Unstructured, err error) {
-	objectSpec = &unstructured.Unstructured{}
+// ToUnstructured is a helper function that creates an unstructured object from
+// any object that contains metadata, spec and optionally status.
+func ToUnstructured(apiVersion, kind, object any) (u *unstructured.Unstructured, err error) {
+	u = &unstructured.Unstructured{}
 	type objS struct {
 		Metadata map[string]interface{}
 		Spec     map[string]interface{}
@@ -33,35 +32,39 @@ func ToUnstructured(apiVersion, kind, object any) (objectSpec *unstructured.Unst
 		return
 	}
 
-	objectSpec.Object = map[string]interface{}{
+	u.Object = map[string]interface{}{
 		"apiVersion": apiVersion,
 		"kind":       kind,
 		"metadata":   o.Metadata,
 		"spec":       o.Spec,
 	}
 	if len(o.Status) > 0 {
-		objectSpec.Object["status"] = o.Status
+		u.Object["status"] = o.Status
 	}
 	return
 }
 
-// ToUnstructuredKubernetesObject is a helper function that wraps a given CR resource in
-// a `crossplane-contrib/provider-kubernetes.Object` structure and returns this as an unstructured.Unstructured object
-func ToUnstructuredKubernetesObject(mp any, providerConfigRef, deletionPolicy string) (objectSpec *unstructured.Unstructured, err error) {
-	objectSpec = &unstructured.Unstructured{}
-	var unstructuredData map[string]interface{}
-	if err = To(mp, &unstructuredData); err != nil {
+// ToUnstructuredKubernetesObject is a helper function that wraps a given CR
+// resource in a `crossplane-contrib/provider-kubernetes.Object` structure and
+// returns this as an unstructured.Unstructured object
+//
+// mr any The managed resource to wrap
+// providerConfigRef string
+func ToUnstructuredKubernetesObject(mr any, providerConfigRef, deletionPolicy string) (o *unstructured.Unstructured, err error) {
+	o = &unstructured.Unstructured{}
+	var ud map[string]interface{} // unstructured data
+	if err = To(mr, &ud); err != nil {
 		return
 	}
 
-	if _, ok := unstructuredData["metadata"]; !ok {
-		err = errors.Wrap(&MissingMetadata{}, "unable to create kubernetes object. object missing metadata")
+	if _, ok := ud["metadata"]; !ok {
+		err = errors.Wrap(&MissingMetadata{}, "unable to create kubernetes object")
 		return
 	}
 
 	var meta metav1.ObjectMeta
-	if err = To(unstructuredData["metadata"], &meta); err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("unable to create kubernetes object : %+v", unstructuredData["metadata"]))
+	if err = To(ud["metadata"], &meta); err != nil {
+		err = errors.Wrapf(err, "unable to create kubernetes object %+v", ud["metadata"])
 		return
 	}
 
@@ -70,7 +73,7 @@ func ToUnstructuredKubernetesObject(mp any, providerConfigRef, deletionPolicy st
 		labels[k] = v
 	}
 
-	objectSpec.Object = map[string]interface{}{
+	o.Object = map[string]interface{}{
 		"apiVersion": "kubernetes.crossplane.io/v1alpha1",
 		"kind":       "Object",
 		"metadata": map[string]interface{}{
@@ -80,7 +83,7 @@ func ToUnstructuredKubernetesObject(mp any, providerConfigRef, deletionPolicy st
 		"spec": map[string]interface{}{
 			"deletionPolicy": deletionPolicy,
 			"forProvider": map[string]interface{}{
-				"manifest": unstructuredData,
+				"manifest": ud,
 			},
 			"writeConnectionSecretToRef": map[string]interface{}{
 				"name":      meta.Name,
@@ -94,7 +97,8 @@ func ToUnstructuredKubernetesObject(mp any, providerConfigRef, deletionPolicy st
 	return
 }
 
-// To is a helper function that converts any object to any object by sending it round-robin through `json.Marshal`
+// To is a helper function that converts any object to any object by sending it
+// round-robin through `json.Marshal`
 func To(resource any, jsonObject any) (err error) {
 	var b []byte
 	if b, err = json.Marshal(resource); err != nil {

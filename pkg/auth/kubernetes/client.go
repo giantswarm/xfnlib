@@ -7,6 +7,14 @@ import (
 	clientconfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
+// Get a kubernetes client for cluster operations
+//
+// By default funtions have no permissions to the cluster and must be explicitly
+// granted any additional required permissions.
+//
+// Where a function requires access to cluster resources, the set should be kept
+// to the smallest feasible set to ensure that no errant function is able to
+// access information inside the cluster that it shouldn't be able to.
 func Client() (c client.Client, err error) {
 	var config *rest.Config
 

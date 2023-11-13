@@ -16,20 +16,32 @@ import (
 	"github.com/giantswarm/xfnlib/pkg/composite"
 )
 
-// GetAssumeRoleArn retrieves the current provider role arn from the providerconfig
+// GetAssumeRoleArn retrieves the current provider role arn from providerconfig
 //
-// This requires the service account the function is runmning
+// This requires the service account the function is running with to have
+// additional permissions in order to obtain the `providerconfig`
+//
+// In order to retrieve the providerconfig, the service account running this
+// function must be bound to a role allowing:
+//
+//	rules:
+//	- apiGroups:
+//	  - aws.upbound.io
+//	  resources:
+//	  - providerconfigs
+//	  verbs:
+//	  - get
 func GetAssumeRoleArn(providerConfigRef *string) (arn *string, err error) {
 	var (
-		unstructuredData *unstructured.Unstructured = &unstructured.Unstructured{}
-		cl               client.Client
+		u  *unstructured.Unstructured = &unstructured.Unstructured{}
+		cl client.Client
 	)
 	if cl, err = kubernetes.Client(); err != nil {
 		err = errors.Wrap(err, "error setting up kubernetes client")
 		return
 	}
 	// Get the provider context
-	unstructuredData.SetGroupVersionKind(schema.GroupVersionKind{
+	u.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   "aws.upbound.io",
 		Kind:    "ProviderConfig",
 		Version: "v1beta1",
@@ -37,7 +49,7 @@ func GetAssumeRoleArn(providerConfigRef *string) (arn *string, err error) {
 
 	if err = cl.Get(context.Background(), client.ObjectKey{
 		Name: *providerConfigRef,
-	}, unstructuredData); err != nil {
+	}, u); err != nil {
 		err = errors.Wrapf(err, "failed to load providerconfig %s", *providerConfigRef)
 		return
 	}
@@ -49,7 +61,7 @@ func GetAssumeRoleArn(providerConfigRef *string) (arn *string, err error) {
 	}
 
 	var spec _spec
-	if err = composite.To(unstructuredData.Object["spec"], &spec); err != nil {
+	if err = composite.To(u.Object["spec"], &spec); err != nil {
 		err = errors.Wrapf(err, "unable to decode provider config")
 		return
 	}
@@ -59,6 +71,13 @@ func GetAssumeRoleArn(providerConfigRef *string) (arn *string, err error) {
 	return
 }
 
+// Config sets up the AWS config using assume roles
+//
+// For this method to work, the service account the function is running with
+// must be annotated with
+//
+//	annotations:
+//	  eks.amazonaws.com/role-arn: YOUR_ROLE_ARN
 func Config(region, providerConfigRef *string) (cfg aws.Config, err error) {
 	var (
 		ctx           context.Context = context.TODO()

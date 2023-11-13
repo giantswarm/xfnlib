@@ -13,15 +13,18 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// Composition contains the main request objects required for interacting with composition function resources.
+// Composition contains the main request objects required for interacting with
+// composition function resources.
 type Composition struct {
-	// ObservedComposite is an object that reflects the composite resource that is created from the claim
+	// ObservedComposite is an object that reflects the composite resource that
+	//is created from the claim
 	ObservedComposite any
 
 	// DesiredComposite is the raw composite resource we want creating
 	DesiredComposite *resource.Composite
 
-	// ObservedComposed is a set of resources that are composed by the composite and exist in the cluster
+	// ObservedComposed is a set of resources that are composed by the composite
+	// and exist in the cluster
 	ObservedComposed map[resource.Name]resource.ObservedComposed
 
 	// DesiredComposed is the set of resources we require to be created
@@ -31,8 +34,8 @@ type Composition struct {
 	Input InputProvider
 }
 
-// InputProvider This is basically a wrapper to `runtime.Object` and exists to ensure that
-// all inputs to the `New` conform to a supported type
+// InputProvider This is basically a wrapper to `runtime.Object` and exists to
+// ensure that all inputs to the `New` conform to a supported type
 type InputProvider interface {
 	runtime.Object
 }
@@ -109,34 +112,37 @@ func New(req *fnv1beta1.RunFunctionRequest, input InputProvider, composite any) 
 
 // ToResponse converts the composition back into the response object
 //
-// This method should be called at the end of your RunFunction immediately before returning a normal response.
+// This method should be called at the end of your RunFunction immediately
+// before returning a normal response.
+//
 // Wrap this in an error handler and set `response.Fatal` on error
-func (c *Composition) ToResponse(rsp *fnv1beta1.RunFunctionResponse) (err error) {
-	if err = response.SetDesiredCompositeResource(rsp, c.DesiredComposite); err != nil {
-		err = errors.Wrapf(err, "cannot set desired composite resources in %T", rsp)
+func (c *Composition) ToResponse(r *fnv1beta1.RunFunctionResponse) (err error) {
+	if err = response.SetDesiredCompositeResource(r, c.DesiredComposite); err != nil {
+		err = errors.Wrapf(err, "cannot set desired composite resources in %T", r)
 		return
 	}
 
-	if err = response.SetDesiredComposedResources(rsp, c.DesiredComposed); err != nil {
-		err = errors.Wrapf(err, "cannot set desired composed resources in %T", rsp)
+	if err = response.SetDesiredComposedResources(r, c.DesiredComposed); err != nil {
+		err = errors.Wrapf(err, "cannot set desired composed resources in %T", r)
 	}
 	return
 }
 
-// AddDesired takes an unstructured object and adds it to the desired composed resources
+// AddDesired takes an unstructured object and adds it to the desired composed
+// resources
 //
-// If the object exists on the stack already, we do a deepEqual to see if the object has changed
-// and if not, this method won't do anything.
-func (c *Composition) AddDesired(name string, object *unstructured.Unstructured) (err error) {
-	if o, ok := c.DesiredComposed[resource.Name(name)]; ok {
+// If the object exists on the stack already, we do a deepEqual to see if the
+// object has changed and if not, this method won't do anything.
+func (c *Composition) AddDesired(n string, u *unstructured.Unstructured) (err error) {
+	if o, ok := c.DesiredComposed[resource.Name(n)]; ok {
 		// Object exists and hasn't changed
-		if reflect.DeepEqual(o.Resource.Object, object.Object) {
+		if reflect.DeepEqual(o.Resource.Object, u.Object) {
 			return
 		}
 	}
-	c.DesiredComposed[resource.Name(name)] = &resource.DesiredComposed{
+	c.DesiredComposed[resource.Name(n)] = &resource.DesiredComposed{
 		Resource: &composed.Unstructured{
-			Unstructured: *object,
+			Unstructured: *u,
 		},
 		Ready: resource.ReadyTrue,
 	}
