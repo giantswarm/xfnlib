@@ -64,19 +64,6 @@ type ProviderConfigSpec struct {
 	SkipMetadataAPICheck      bool `json:"skip_metadata_api_check,omitempty"`
 }
 
-var services map[string]string
-
-func GetServiceEndpoint(service string) string {
-	var (
-		endpoint string
-		ok       bool
-	)
-	if endpoint, ok = services[service]; !ok {
-		return ""
-	}
-	return endpoint
-}
-
 // GetAssumeRoleArn retrieves the current provider role arn from providerconfig
 //
 // This requires the service account the function is running with to have
@@ -207,13 +194,15 @@ func GetCredentialsFromSecret(name, namespace, key string) (creds credsv2.Static
 //
 //	annotations:
 //	  eks.amazonaws.com/role-arn: YOUR_ROLE_ARN
-func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Config, err error) {
+func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Config, services map[string]string, err error) {
 	var (
 		ctx           context.Context = context.TODO()
 		pcfg          *ProviderConfigSpec
 		assumeRoleArn *string
 		opts          []config.LoadOptionsFunc = make([]config.LoadOptionsFunc, 0)
 	)
+
+	services = make(map[string]string)
 
 	if region != nil {
 		opts = append(opts, config.WithRegion(*region))
@@ -234,7 +223,6 @@ func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Conf
 		opts = append(opts, epopts...)
 
 		if pcfg.Endpoint.Services != nil {
-			services = make(map[string]string)
 			for _, service := range pcfg.Endpoint.Services {
 				services[service] = pcfg.Endpoint.URL.Static
 			}
