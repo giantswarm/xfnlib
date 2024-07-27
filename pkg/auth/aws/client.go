@@ -227,8 +227,8 @@ func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Conf
 				services[service] = pcfg.Endpoint.URL.Static
 			}
 		}
+		log.Info("ProviderConfig", "endpoint", pcfg.Endpoint)
 	}
-	log.Info("ProviderConfig", "endpoint", pcfg.Endpoint)
 
 	if pcfg.Credentials.Source == "Secret" {
 		var creds credsv2.StaticCredentialsProvider
@@ -265,9 +265,11 @@ func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Conf
 		err = errors.New("upbound credentials not supported")
 		return
 	case "WebIdentity":
+		log.Info("Using WebIdentity credentials")
 		stsclient := sts.NewFromConfig(cfg)
 
 		assumeRoleArn = &pcfg.AssumeRoleChain[0].RoleARN
+		log.Info("Assuming role", "role", *assumeRoleArn)
 		if cfg, err = config.LoadDefaultConfig(
 			ctx,
 			config.WithRegion(*region),
