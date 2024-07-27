@@ -214,6 +214,7 @@ func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Conf
 	}
 
 	if pcfg.Endpoint != nil {
+		log.Info("setting up endpoint")
 		var epopts []config.LoadOptionsFunc
 		epopts, err = getEndpointOptions(pcfg.Endpoint)
 		if err != nil {
