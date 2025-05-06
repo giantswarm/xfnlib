@@ -4,7 +4,7 @@ import (
 	"reflect"
 
 	"github.com/crossplane/crossplane-runtime/pkg/errors"
-	v1 "github.com/crossplane/function-sdk-go/proto/v1"
+	fnv1 "github.com/crossplane/function-sdk-go/proto/v1"
 	"github.com/crossplane/function-sdk-go/request"
 	"github.com/crossplane/function-sdk-go/resource"
 	"github.com/crossplane/function-sdk-go/resource/composed"
@@ -68,7 +68,7 @@ type InputProvider interface {
 //		response.Normal(rsp, "Successful run")
 //		return rsp, nil
 //	}
-func New(req *v1.RunFunctionRequest, input InputProvider, composite any) (c *Composition, err error) {
+func New(req *fnv1.RunFunctionRequest, input InputProvider, composite any) (c *Composition, err error) {
 	c = &Composition{
 		Input:             input,
 		ObservedComposite: composite,
@@ -116,7 +116,7 @@ func New(req *v1.RunFunctionRequest, input InputProvider, composite any) (c *Com
 // before returning a normal response.
 //
 // Wrap this in an error handler and set `response.Fatal` on error
-func (c *Composition) ToResponse(r *v1.RunFunctionResponse) (err error) {
+func (c *Composition) ToResponse(r *fnv1.RunFunctionResponse) (err error) {
 	if err = response.SetDesiredCompositeResource(r, c.DesiredComposite); err != nil {
 		err = errors.Wrapf(err, "cannot set desired composite resources in %T", r)
 		return
