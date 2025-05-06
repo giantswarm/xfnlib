@@ -4,7 +4,7 @@ import (
 	"reflect"
 
 	"github.com/crossplane/crossplane-runtime/pkg/errors"
-	fnv1beta1 "github.com/crossplane/function-sdk-go/proto/v1beta1"
+	v1 "github.com/crossplane/function-sdk-go/proto/v1"
 	"github.com/crossplane/function-sdk-go/request"
 	"github.com/crossplane/function-sdk-go/resource"
 	"github.com/crossplane/function-sdk-go/resource/composed"
@@ -68,7 +68,7 @@ type InputProvider interface {
 //		response.Normal(rsp, "Successful run")
 //		return rsp, nil
 //	}
-func New(req *fnv1beta1.RunFunctionRequest, input InputProvider, composite any) (c *Composition, err error) {
+func New(req *v1.RunFunctionRequest, input InputProvider, composite any) (c *Composition, err error) {
 	c = &Composition{
 		Input:             input,
 		ObservedComposite: composite,
@@ -116,7 +116,7 @@ func New(req *fnv1beta1.RunFunctionRequest, input InputProvider, composite any) 
 // before returning a normal response.
 //
 // Wrap this in an error handler and set `response.Fatal` on error
-func (c *Composition) ToResponse(r *fnv1beta1.RunFunctionResponse) (err error) {
+func (c *Composition) ToResponse(r *v1.RunFunctionResponse) (err error) {
 	if err = response.SetDesiredCompositeResource(r, c.DesiredComposite); err != nil {
 		err = errors.Wrapf(err, "cannot set desired composite resources in %T", r)
 		return
@@ -134,9 +134,9 @@ func (c *Composition) ToResponse(r *fnv1beta1.RunFunctionResponse) (err error) {
 // If the object exists on the stack already, we do a deepEqual to see if the
 // object has changed and if not, this method won't do anything.
 //
-// - `n` The name of the composite resource to add. This is the pipeline name
-//   and not the metadata name
-// - `u` The unstructured object to add to the set of desired resources
+//   - `n` The name of the composite resource to add. This is the pipeline name
+//     and not the metadata name
+//   - `u` The unstructured object to add to the set of desired resources
 func (c *Composition) AddDesired(n string, u *unstructured.Unstructured) (err error) {
 	if o, ok := c.DesiredComposed[resource.Name(n)]; ok {
 		// Object exists and hasn't changed
