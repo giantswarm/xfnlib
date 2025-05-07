@@ -269,7 +269,11 @@ func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Conf
 		log.Info("Using WebIdentity credentials")
 		stsclient := sts.NewFromConfig(cfg)
 
-		assumeRoleArn = &pcfg.AssumeRoleChain[0].RoleARN
+		if len(pcfg.AssumeRoleChain) > 0 {
+			assumeRoleArn = &pcfg.AssumeRoleChain[0].RoleARN
+		} else {
+			assumeRoleArn = &pcfg.Credentials.WebIdentity.RoleArn
+		}
 		log.Info("Assuming role", "role", *assumeRoleArn)
 		if cfg, err = config.LoadDefaultConfig(
 			ctx,
