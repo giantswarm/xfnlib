@@ -2,7 +2,9 @@ package aws
 
 import (
 	"context"
+	"os"
 
+	"github.com/crossplane-contrib/provider-aws/pkg/utils/pointer"
 	"github.com/go-ini/ini"
 
 	"github.com/crossplane/function-sdk-go/logging"
@@ -16,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 
 	credsv2 "github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	stscredsv2 "github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/crossplane/crossplane-runtime/pkg/errors"
@@ -271,25 +274,57 @@ func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Conf
 
 		if len(pcfg.AssumeRoleChain) > 0 {
 			assumeRoleArn = &pcfg.AssumeRoleChain[0].RoleARN
+
+			log.Info("Assuming role", "role", *assumeRoleArn)
+			if cfg, err = config.LoadDefaultConfig(
+				ctx,
+				config.WithRegion(*region),
+				config.WithCredentialsProvider(aws.NewCredentialsCache(
+					stscredsv2.NewAssumeRoleProvider(
+						stsclient,
+						*assumeRoleArn,
+					)),
+				),
+			); err != nil {
+				err = errors.Wrapf(err, "failed to load aws config for assume role '%q'", *assumeRoleArn)
+			}
 		} else {
-			assumeRoleArn = &pcfg.Credentials.WebIdentity.RoleArn
-		}
-		log.Info("Assuming role", "role", *assumeRoleArn)
-		if cfg, err = config.LoadDefaultConfig(
-			ctx,
-			config.WithRegion(*region),
-			config.WithCredentialsProvider(aws.NewCredentialsCache(
-				stscredsv2.NewAssumeRoleProvider(
-					stsclient,
-					*assumeRoleArn,
-				)),
-			),
-		); err != nil {
-			err = errors.Wrapf(err, "failed to load aws config for assume role '%q'", *assumeRoleArn)
+			awscfg, err := config.LoadDefaultConfig(ctx, nil)
+			if err != nil {
+				err = errors.Wrap(err, "failed to load default AWS config")
+			}
+
+			roleArn := pcfg.Credentials.WebIdentity.RoleArn
+
+			stsclient := sts.NewFromConfig(awscfg)
+
+			cfg, err = config.LoadDefaultConfig(
+				ctx,
+				config.WithRegion(*region),
+				config.WithCredentialsProvider(aws.NewCredentialsCache(
+					stscreds.NewWebIdentityRoleProvider(
+						stsclient,
+						pointer.StringValue(&roleArn),
+						stscreds.IdentityTokenFile(getWebidentityTokenFilePath()),
+						func(o *stscreds.WebIdentityRoleOptions) {
+							o.RoleSessionName = "crossplane-provider-aws"
+						},
+					)),
+				),
+			)
 		}
 	}
 
 	return
+}
+
+const webIdentityTokenFileDefaultPath = "/var/run/secrets/eks.amazonaws.com/serviceaccount/token"
+
+func getWebidentityTokenFilePath() string {
+	if path := os.Getenv("AWS_WEB_IDENTITY_TOKEN_FILE"); path != "" {
+		return path
+	}
+	return webIdentityTokenFileDefaultPath
 }
 
 func getEndpointOptions(ep *endpoint) (opts []config.LoadOptionsFunc, err error) {
