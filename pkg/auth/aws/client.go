@@ -289,7 +289,7 @@ func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Conf
 				err = errors.Wrapf(err, "failed to load aws config for assume role '%q'", *assumeRoleArn)
 			}
 		} else {
-			awscfg, err := config.LoadDefaultConfig(ctx, nil)
+			awscfg, err := config.LoadDefaultConfig(ctx)
 			if err != nil {
 				err = errors.Wrap(err, "failed to load default AWS config")
 			}
