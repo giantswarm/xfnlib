@@ -264,18 +264,12 @@ func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Conf
 
 	switch pcfg.Credentials.Source {
 	case "Secret":
-		return
-	case "Upbound":
-		err = errors.New("upbound credentials not supported")
-		return
-	case "WebIdentity":
-		log.Info("Using WebIdentity credentials")
-		stsclient := sts.NewFromConfig(cfg)
-
 		if len(pcfg.AssumeRoleChain) > 0 {
+			stsclient := sts.NewFromConfig(cfg)
+
 			assumeRoleArn = &pcfg.AssumeRoleChain[0].RoleARN
 
-			log.Info("Assuming role", "role", *assumeRoleArn)
+			log.Info("Assuming role", "role", *assumeRoleArn, "credentialsSource", pcfg.Credentials.Source)
 			if cfg, err = config.LoadDefaultConfig(
 				ctx,
 				config.WithRegion(*region),
@@ -286,7 +280,33 @@ func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Conf
 					)),
 				),
 			); err != nil {
-				err = errors.Wrapf(err, "failed to load aws config for assume role '%q'", *assumeRoleArn)
+				err = errors.Wrapf(err, "failed to load aws config to assume role '%q'", *assumeRoleArn)
+			}
+		}
+		return
+	case "Upbound":
+		err = errors.New("upbound credentials not supported")
+		return
+	case "WebIdentity":
+		log.Info("Using WebIdentity credentials")
+
+		if len(pcfg.AssumeRoleChain) > 0 {
+			stsclient := sts.NewFromConfig(cfg)
+
+			assumeRoleArn = &pcfg.AssumeRoleChain[0].RoleARN
+
+			log.Info("Assuming role", "role", *assumeRoleArn, "credentialsSource", pcfg.Credentials.Source)
+			if cfg, err = config.LoadDefaultConfig(
+				ctx,
+				config.WithRegion(*region),
+				config.WithCredentialsProvider(aws.NewCredentialsCache(
+					stscredsv2.NewAssumeRoleProvider(
+						stsclient,
+						*assumeRoleArn,
+					)),
+				),
+			); err != nil {
+				err = errors.Wrapf(err, "failed to load aws config to assume role '%q'", *assumeRoleArn)
 			}
 		} else {
 			awscfg, err := config.LoadDefaultConfig(ctx)
