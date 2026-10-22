@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.19
 	github.com/crossplane/crossplane-runtime v1.19.0
 	github.com/crossplane/function-sdk-go v0.4.0
-	github.com/go-ini/ini v1.67.0
+	github.com/go-ini/ini v1.67.3
 	k8s.io/api v0.33.0
 	k8s.io/apimachinery v0.33.0
 	k8s.io/client-go v0.33.0
