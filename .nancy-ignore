@@ -1,3 +1,21 @@
-# Affects all versions of archiver which is required by vault.
-# Taken from: https://github.com/giantswarm/opsctl/pull/1072/files#diff-bbe4a7fb12c43622bce7c6840c770e9995be614626a219942ca138403629cb69R1
-CVE-2019-10743 until=2021-10-17
+CVE-2026-89090 until=2026-11-27 # github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream@v1.6.5 since=2026-10-28
+CVE-2026-53495 until=2026-11-27 # github.com/containerd/containerd@v1.7.22 since=2026-10-28
+CVE-2025-47290 until=2026-11-27 # github.com/containerd/containerd@v1.7.22 since=2026-10-28
+CVE-2026-53488 until=2026-11-27 # github.com/containerd/containerd@v1.7.22 since=2026-10-28
+CVE-2026-53493 until=2026-11-27 # github.com/containerd/containerd@v1.7.22 since=2026-10-28
+CVE-2024-25621 until=2026-11-27 # github.com/containerd/containerd@v1.7.22 since=2026-10-28
+CVE-2024-40635 until=2026-11-27 # github.com/containerd/containerd@v1.7.22 since=2026-10-28
+CVE-2025-47291 until=2026-11-27 # github.com/containerd/containerd@v1.7.22 since=2026-10-28
+CVE-2025-64329 until=2026-11-27 # github.com/containerd/containerd@v1.7.22 since=2026-10-28
+CVE-2026-47262 until=2026-11-27 # github.com/containerd/containerd@v1.7.22 since=2026-10-28
+CVE-2026-71482 until=2026-11-27 # github.com/containerd/stargz-snapshotter/estargz@v0.15.1 since=2026-10-28
+CVE-2026-114437 until=2026-11-27 # github.com/go-chi/chi/v5@v5.1.0 since=2026-10-28
+CVE-2025-71405 until=2026-11-27 # github.com/go-chi/chi/v5@v5.1.0 since=2026-10-28
+CVE-2026-72816 until=2026-11-27 # github.com/go-chi/chi/v5@v5.1.0 since=2026-10-28
+CVE-2026-34986 until=2026-11-27 # github.com/go-jose/go-jose/v4@v4.0.4 since=2026-10-28
+CVE-2025-27144 until=2026-11-27 # github.com/go-jose/go-jose/v4@v4.0.4 since=2026-10-28
+CVE-2026-116586 until=2026-11-27 # github.com/go-jose/go-jose/v4@v4.0.4 since=2026-10-28
+CVE-2026-116585 until=2026-11-27 # github.com/go-jose/go-jose/v4@v4.0.4 since=2026-10-28
+CVE-2026-40898 until=2026-11-27 # github.com/quic-go/quic-go@v0.59.0 since=2026-10-28
+CVE-2021-43668 until=2026-11-27 # github.com/syndtr/goleveldb@v1.0.1-0.20220721030215-126854af5e6d since=2026-10-28
+CVE-2026-5160 until=2026-11-27 # github.com/yuin/goldmark@v1.4.13 since=2026-10-28
