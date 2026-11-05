@@ -16,4 +16,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]: https://github.com/giantswarm/xfnlib/tree/main
 - Regenerate `.github/workflows/zz_generated.*.yaml` via devctl to use the centralized reusable workflow, removing the Node-20 `mindsers/changelog-reader-action` dependency.
+- Update github.com/crossplane/function-sdk-go to v0.7.1 (giantswarm/xfnlib#9)
 
