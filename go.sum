@@ -121,6 +121,8 @@ github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XL
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/crossplane-contrib/provider-aws v0.52.3 h1:B73DlXAUQQO/GrQEiCoeG3NRCTh/4FEnY4fPZ5XSILU=
 github.com/crossplane-contrib/provider-aws v0.52.3/go.mod h1:QNH8qd0vB3BcBrsftSzd/hOKLH2jb7fT6a5A5OCC+ck=
+github.com/crossplane-contrib/provider-aws v0.60.0 h1:9EVjNv1MSg6sI58n3bWRKUOjECxtmjCnmb+Tt0Il5Ws=
+github.com/crossplane-contrib/provider-aws v0.60.0/go.mod h1:4Xd8Vq1LyAvO3cyoJBsyRzyNhWzdSN3gvSWbxZkWMIs=
 github.com/crossplane/crossplane-runtime v1.20.12 h1:sLsdITW9mLSxgDEQz2E4nbnVuKTNT7a0+Jdh5R9tY+w=
 github.com/crossplane/crossplane-runtime v1.20.12/go.mod h1:AbUGYOj4N6S5Ti1JcBv8AODrY9/EEhzp1nnb/cxwl3I=
 github.com/crossplane/function-sdk-go v0.4.0 h1:1jd+UIaZlVNQCUO4hLAgUqWBRnUKw2ObF9ZuMw5CpKk=
