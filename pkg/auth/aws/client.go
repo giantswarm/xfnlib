@@ -8,20 +8,21 @@ import (
 	"github.com/go-ini/ini"
 
 	"github.com/crossplane/function-sdk-go/logging"
-	"github.com/giantswarm/xfnlib/pkg/auth/kubernetes"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/giantswarm/xfnlib/pkg/auth/kubernetes"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 
 	credsv2 "github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
-	stscredsv2 "github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/crossplane/crossplane-runtime/pkg/errors"
+
 	"github.com/giantswarm/xfnlib/pkg/composite"
 )
 
@@ -90,7 +91,7 @@ type ProviderConfigSpec struct {
 //		  - get
 func GetProviderConfig(providerConfigRef *string) (cfg *ProviderConfigSpec, err error) {
 	var (
-		u  *unstructured.Unstructured = &unstructured.Unstructured{}
+		u  = &unstructured.Unstructured{}
 		cl client.Client
 	)
 	if cl, err = kubernetes.Client(); err != nil {
@@ -199,10 +200,10 @@ func GetCredentialsFromSecret(name, namespace, key string) (creds credsv2.Static
 //	  eks.amazonaws.com/role-arn: YOUR_ROLE_ARN
 func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Config, services map[string]string, err error) {
 	var (
-		ctx           context.Context = context.TODO()
+		ctx           = context.TODO()
 		pcfg          *ProviderConfigSpec
 		assumeRoleArn *string
-		opts          []config.LoadOptionsFunc = make([]config.LoadOptionsFunc, 0)
+		opts          = make([]config.LoadOptionsFunc, 0)
 	)
 
 	services = make(map[string]string)
@@ -274,7 +275,7 @@ func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Conf
 				ctx,
 				config.WithRegion(*region),
 				config.WithCredentialsProvider(aws.NewCredentialsCache(
-					stscredsv2.NewAssumeRoleProvider(
+					stscreds.NewAssumeRoleProvider(
 						stsclient,
 						*assumeRoleArn,
 					)),
@@ -300,7 +301,7 @@ func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Conf
 				ctx,
 				config.WithRegion(*region),
 				config.WithCredentialsProvider(aws.NewCredentialsCache(
-					stscredsv2.NewAssumeRoleProvider(
+					stscreds.NewAssumeRoleProvider(
 						stsclient,
 						*assumeRoleArn,
 					)),
@@ -309,36 +310,42 @@ func Config(region, providerConfigRef *string, log logging.Logger) (cfg aws.Conf
 				err = errors.Wrapf(err, "failed to load aws config to assume role '%q'", *assumeRoleArn)
 			}
 		} else {
-			awscfg, err := config.LoadDefaultConfig(ctx)
-			if err != nil {
-				err = errors.Wrap(err, "failed to load default AWS config")
-			}
-
-			roleArn := pcfg.Credentials.WebIdentity.RoleArn
-
-			stsclient := sts.NewFromConfig(awscfg)
-
-			cfg, err = config.LoadDefaultConfig(
-				ctx,
-				config.WithRegion(*region),
-				config.WithCredentialsProvider(aws.NewCredentialsCache(
-					stscreds.NewWebIdentityRoleProvider(
-						stsclient,
-						pointer.StringValue(&roleArn),
-						stscreds.IdentityTokenFile(getWebidentityTokenFilePath()),
-						func(o *stscreds.WebIdentityRoleOptions) {
-							o.RoleSessionName = "crossplane-provider-aws"
-						},
-					)),
-				),
-			)
+			cfg, err = webIdentityConfig(ctx, *region, pcfg.Credentials.WebIdentity.RoleArn)
 		}
 	}
 
 	return
 }
 
-const webIdentityTokenFileDefaultPath = "/var/run/secrets/eks.amazonaws.com/serviceaccount/token"
+// webIdentityConfig builds an AWS config that assumes roleArn using the web
+// identity token mounted into the function's pod.
+func webIdentityConfig(ctx context.Context, region, roleArn string) (cfg aws.Config, err error) {
+	awscfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		err = errors.Wrap(err, "failed to load default AWS config")
+		return
+	}
+
+	stsclient := sts.NewFromConfig(awscfg)
+
+	cfg, err = config.LoadDefaultConfig(
+		ctx,
+		config.WithRegion(region),
+		config.WithCredentialsProvider(aws.NewCredentialsCache(
+			stscreds.NewWebIdentityRoleProvider(
+				stsclient,
+				pointer.StringValue(&roleArn),
+				stscreds.IdentityTokenFile(getWebidentityTokenFilePath()),
+				func(o *stscreds.WebIdentityRoleOptions) {
+					o.RoleSessionName = "crossplane-provider-aws"
+				},
+			)),
+		),
+	)
+	return
+}
+
+const webIdentityTokenFileDefaultPath = "/var/run/secrets/eks.amazonaws.com/serviceaccount/token" //nolint:gosec // G101: well-known EKS token mount path, not a credential
 
 func getWebidentityTokenFilePath() string {
 	if path := os.Getenv("AWS_WEB_IDENTITY_TOKEN_FILE"); path != "" {
@@ -347,36 +354,27 @@ func getWebidentityTokenFilePath() string {
 	return webIdentityTokenFileDefaultPath
 }
 
+// getEndpointOptions sets the base endpoint every service client resolves
+// against when the provider config overrides the AWS endpoint.
+//
+// The base endpoint has no equivalent of the deprecated resolver's
+// HostnameImmutable flag: S3 clients built from this config should honour the
+// provider config's S3UsePathStyle field to keep the bucket out of the host.
 func getEndpointOptions(ep *endpoint) (opts []config.LoadOptionsFunc, err error) {
-	if ep.URL != nil {
-		switch ep.URL.Type {
-		case "dynamic":
-			if ep.URL.Dynamic != "" {
-				opts = append(opts, config.WithEndpointResolverWithOptions(
-					aws.EndpointResolverWithOptionsFunc(
-						func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-							return aws.Endpoint{
-								URL:               ep.URL.Dynamic,
-								HostnameImmutable: ep.HostnameImmutable,
-							}, nil
-						},
-					),
-				))
-			}
-		case "static":
-			if ep.URL.Static != "" {
-				opts = append(opts, config.WithEndpointResolverWithOptions(
-					aws.EndpointResolverWithOptionsFunc(
-						func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-							return aws.Endpoint{
-								URL:               ep.URL.Static,
-								HostnameImmutable: ep.HostnameImmutable,
-							}, nil
-						},
-					),
-				))
-			}
-		}
+	if ep.URL == nil {
+		return
+	}
+
+	var url string
+	switch ep.URL.Type {
+	case "dynamic":
+		url = ep.URL.Dynamic
+	case "static":
+		url = ep.URL.Static
+	}
+
+	if url != "" {
+		opts = append(opts, config.WithBaseEndpoint(url))
 	}
 	return
 }

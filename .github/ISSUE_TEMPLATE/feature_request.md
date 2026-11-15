@@ -13,5 +13,5 @@ implement it sensibly.
 
 ### How could this Function help solve your problem?
 <!--
-Let us know how you think this Function could help with your use case. 
+Let us know how you think this Function could help with your use case.
 -->
