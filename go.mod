@@ -13,7 +13,7 @@ require (
 	github.com/go-ini/ini v1.67.0
 	k8s.io/api v0.33.0
 	k8s.io/apimachinery v0.33.0
-	k8s.io/client-go v0.33.0
+	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/controller-runtime v0.20.4
 )
 
