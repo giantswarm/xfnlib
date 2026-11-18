@@ -18,7 +18,7 @@ appreciated!
 -->
 
 ### What environment did it happen in?
-Function version: 
+Function version:
 
 <!--
 Include at least the version or commit of Crossplane you were running. Consider

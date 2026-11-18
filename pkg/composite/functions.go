@@ -8,6 +8,10 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
+// nameField is the key holding an object reference's name in Kubernetes
+// manifests: metadata.name and the name of a referenced object.
+const nameField = "name"
+
 // ToUnstructured is a helper function that creates an unstructured object from
 // any object that contains metadata, spec and optionally status.
 func ToUnstructured(apiVersion, kind, object any) (u *unstructured.Unstructured, err error) {
@@ -68,7 +72,7 @@ func ToUnstructuredKubernetesObject(mr any, providerConfigRef, deletionPolicy st
 		return
 	}
 
-	var labels map[string]interface{} = make(map[string]interface{})
+	labels := make(map[string]interface{})
 	for k, v := range meta.Labels {
 		labels[k] = v
 	}
@@ -77,8 +81,8 @@ func ToUnstructuredKubernetesObject(mr any, providerConfigRef, deletionPolicy st
 		"apiVersion": "kubernetes.crossplane.io/v1alpha1",
 		"kind":       "Object",
 		"metadata": map[string]interface{}{
-			"name":   meta.Name,
-			"labels": labels,
+			nameField: meta.Name,
+			"labels":  labels,
 		},
 		"spec": map[string]interface{}{
 			"deletionPolicy": deletionPolicy,
@@ -86,11 +90,11 @@ func ToUnstructuredKubernetesObject(mr any, providerConfigRef, deletionPolicy st
 				"manifest": ud,
 			},
 			"writeConnectionSecretToRef": map[string]interface{}{
-				"name":      meta.Name,
+				nameField:   meta.Name,
 				"namespace": meta.Namespace,
 			},
 			"providerConfigRef": map[string]interface{}{
-				"name": providerConfigRef,
+				nameField: providerConfigRef,
 			},
 		},
 	}
