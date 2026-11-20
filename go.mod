@@ -10,7 +10,7 @@ require (
 	github.com/crossplane-contrib/provider-aws v0.52.3
 	github.com/crossplane/crossplane-runtime v1.20.12
 	github.com/crossplane/function-sdk-go v0.4.0
-	github.com/go-ini/ini v1.67.0
+	github.com/go-ini/ini v1.68.0
 	k8s.io/api v0.33.0
 	k8s.io/apimachinery v0.33.0
 	k8s.io/client-go v0.33.0
