@@ -47,6 +47,8 @@ github.com/crossplane-contrib/provider-aws v0.52.3 h1:B73DlXAUQQO/GrQEiCoeG3NRCT
 github.com/crossplane-contrib/provider-aws v0.52.3/go.mod h1:QNH8qd0vB3BcBrsftSzd/hOKLH2jb7fT6a5A5OCC+ck=
 github.com/crossplane/crossplane-runtime v1.20.12 h1:sLsdITW9mLSxgDEQz2E4nbnVuKTNT7a0+Jdh5R9tY+w=
 github.com/crossplane/crossplane-runtime v1.20.12/go.mod h1:AbUGYOj4N6S5Ti1JcBv8AODrY9/EEhzp1nnb/cxwl3I=
+github.com/crossplane/crossplane-runtime v1.20.13 h1:2DZIekmzttQdcns/r4bpxo/8FYGKun/dishXoF0shVw=
+github.com/crossplane/crossplane-runtime v1.20.13/go.mod h1:MA1kHqzuqwZbXBn2NBd/3kXTG7xDVA3P3vhJ+NC3/As=
 github.com/crossplane/function-sdk-go v0.4.0 h1:1jd+UIaZlVNQCUO4hLAgUqWBRnUKw2ObF9ZuMw5CpKk=
 github.com/crossplane/function-sdk-go v0.4.0/go.mod h1:jLnzUG8pt8tn/U6/uvtNStAhDjhIq4wCR31yECT54NM=
 github.com/crossplane/upjet v1.4.1-0.20240911184956-3afbb7796d46 h1:2IH1YPTBrNmBj0Z1OCjEBTrQCuRaLutZbWLaswFeCFQ=
