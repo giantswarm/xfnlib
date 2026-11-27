@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.33.16
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.16
 	github.com/aws/aws-sdk-go-v2/service/sts v1.51.9
-	github.com/crossplane-contrib/provider-aws v0.52.3
+	github.com/crossplane-contrib/provider-aws v0.60.0
 	github.com/crossplane/crossplane-runtime v1.20.12
 	github.com/crossplane/function-sdk-go v0.4.0
 	github.com/go-ini/ini v1.67.0
